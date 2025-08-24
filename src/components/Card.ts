@@ -1,4 +1,4 @@
-import { IBasketCard } from "../types";
+import { TCard } from "../types";
 import { ensureElement } from "../utils/utils";
 import { Component } from "./base/component";
 
@@ -6,7 +6,7 @@ interface ICardActions {
   onclick: (event: MouseEvent) => void;
 }
 
-export class Card extends Component<IBasketCard> {
+export class Card extends Component<TCard> {
   protected cardTitle: HTMLElement;
   protected cardPrice: HTMLElement;
   protected cardCategory?: HTMLElement;

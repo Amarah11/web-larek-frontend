@@ -97,7 +97,7 @@ interface IProduct {
 5.  `id` - идентификатор товара
 6.  `description` - описание товара
 
-### Интерфейс описывающий товар, лежащий в корзине
+### Интерфейс, частисно описывающий товар, лежащий в корзине `IBasketIndex`
 
 ```typescript
 interface IBasketIndex {
@@ -121,7 +121,7 @@ interface IBasket {
 1. `products` - массив идентефикаторов продуктов в корзине
 2.  `total` - сумма товаров в корзине
 
-### Интерфейс описывающий заказ, отправляемый на сервер
+### Интерфейс описывающий заказ, отправляемый на сервер `IOrder`
 
 ```typescript
 interface IOrder {
@@ -141,7 +141,7 @@ interface IOrder {
 5.  `phone` - телефон покупателя 
 6.  `total` - итоговая сумма в заказе
 
-### Интерфейс описывающий промис, который отдается при отправке товара на сервер
+### Интерфейс описывающий промис, который отдается при отправке товара на сервер `IOrderResult`
 
 ```typescript
 interface IOrderResult {
@@ -169,7 +169,16 @@ type TOrderForm = Omit<IOrder, 'total' | 'items'>
 type TPaymentMethod = 'card' | 'cash' | ''
 ```
 
-Создан для использования в методах модели данных
+Создан для использования в методах модели 
+
+### Тип данных `TCard`
+
+Создается на основе двух интерфейсов `IProduct` и `IBasketCard`
+Нужен для типизации карточек товара 
+
+```typescript 
+type ICard = IProduct & IBasketIndex;
+```
 
 
 ## Применяемый паттерн: MVP
@@ -251,34 +260,146 @@ class ProductApi extends Api {
 
 
 ## Компоненты представления 
-<!--  -->
+
+В компонеты представления входят базовые классы:
+`api.ts` - для работы с API, 
+`component.ts` - описывает компоненты и методы работы с ними(setText, setDisabled, ...) 
+`event.ts` - для работы с событиями
+`form.ts` - универсальный класс для работы с формами 
+
+### Класс `Card.ts`
+
+Предназначен для описание карточки товара, ее свойств и методов
+Наследуется от базового типа `Component`, который типизируется дженериком типа `TCard` 
+
+```typescript
+interface ICardActions {
+  onclick: (event: MouseEvent) => void;
+}
+
+class Card extends Component<IBasketCard> {
+  protected cardTitle: HTMLElement; // название карточки
+  protected cardPrice: HTMLElement; // цена
+  protected cardCategory?: HTMLElement; // категория товара(необязательное свойство)
+  protected cardImage?: HTMLImageElement; // картинка товара(необязательное свойство)
+  protected cardButton?: HTMLButtonElement; // кнопка (необязательное свойство)
+  protected cardDescription?: HTMLElement; // описание товара(необязательное свойство)
+  protected cardIndex?: HTMLElement; // индекс карточки в корзине(необязательное свойство)
+
+  // конструктор принмает в контейнере HTMLElement и actions(c типизацией интерфейсом ICardAcrions) для того чтобы регаировать на события MouseEvent пользователя
+  constructor(container: HTMLElement, actions?: ICardActions) {
+    super(container);
+
+    // дальше идет поиск элементов на страничке с помощью ensureElemet(те, которые есть в любой карточке) и querySelector(которые необязательны)
+    ...
+    // обработчик события 
+    if(actions?.onclick) {}
+  }
+
+  set title(value:string) {} // устанавливаем значение в cardTitle
+
+  get title():string {} // получаем название карточки чтобы потом установить его в alt для картинки
+
+  set price(value:string) {} // устанавливаем цену и учитываем наличие бесценных товаров
+
+  set category(value:string) {} // устанавливаем категорию товара и, в зависимости от нее, прописываем логику изменения отображения категории
+
+  set image(value:string) {} // устанавливаем картинку 
+
+  set description(value:string) {} // устанавливаем описание товара, которое будет использовано при событии 'prewiew:changed'
+
+  set button(value:string) {} // устанавливаем кнопку для того, чтобы менять текст кнопки в зависимости от того, добавлен ли элемент в корзину
+
+  set index(value:number) {} // устанавливаем index карточки, нужен для нумерации в корзине
+}
+```
+
+### Класс `Basket.ts`
+
+Предназначен для описание корзины товаров, ее свойств и методов
+Наследуется от базового типа `Component`, который типизируется дженериком интерфейса `IBasketView` 
+
+```typescript
+interface IBasketView {
+  items: HTMLElement[]; // массив всех HTMLElement  
+  total: number; // итоговая сумма 
+}
+
+class Basket extends Component<IBasketView> {
+  protected itemsContainer: HTMLElement; // свойство контейнерва товаров
+  protected totalContainer: HTMLElement; // итоговая сумма 
+  protected buttonContainer: HTMLElement; // кнопка в корзине
+
+  // конструктор принмает в контейнере HTMLElement и events для работы с событиями
+  constructor(container: HTMLElement, protected events: EventEmitter){
+    super(container);
+
+    // дальше идет поиск элементов на страничке
+    ...
+    // обрабатываем клик по кнопке и инициируем событие 
+    this.buttonContainer.addEventListener('click', () => {
+      events.emit('order:open');
+    })
+
+    // ставим начальное значение для массива элементов корзины
+    this.items = [];
+  }
+
+  set items(items: HTMLElement[]) {} // метод заполняющий массив элементов корзины, принимает массив HTMLElement-ов, также включает в себя логику, в случае пустого массива
+
+  set total(total: number) {} // метод устанавливающий итоговую сумму в корзине
+}
+```
+
+### Класс `Modal.ts`
+
+Предназначен для описание всех модальных окон, ее свойств и методов
+Наследуется от базового типа `Component`, который типизируется дженериком интерфейса `IModal` 
+
+```typescript
+interface IModal {
+  modalContent: HTMLElement;
+}
+
+class Modal extends Component<IModal> {
+  protected closeButton: HTMLButtonElement; // закрывающая модалку кнопка
+  protected content: HTMLElement; // контент модального окна
+
+  // конструктор принмает в контейнере HTMLElement и events для работы с событиями
+  constructor(container: HTMLElement, protected events: IEvents) {
+    super(container);
+
+    // дальше идет поиск элементов на страничке
+    ...
+    // обработчики события 'click'
+    this.closeButton.addEventListener('click', this.close.bind(this));
+    this.container.addEventListener('click', this.close.bind(this));
+    this.content.addEventListener('click', (event) => event.stopPropagation());
+  }
+
+  set modalContent(value: HTMLElement) {} // устанавливаем контент
+
+  open() {} // метод, открывающий модалку и инициирующий событие 'modal:open'(в нем блокируется прокрутка страницы)
+
+  close() {} // метод, закрывающий модалку и инициирующий событие 'modal:close'(в нем разблокируется прокрутка страницы)
+
+  render(data: IModal): HTMLElement {} // ренерит модалку, принимает данные интерфейса IModal и возвращает container с дженериком HTMLElement, также открывает модальное окно посредством метода open()
+}
+```
 
 ## Презентер
 
 Так как в приложении всего одна страница, достаточно одного презентера. Код презентера не будет вынесен 
-в отдельный класс, а будет размещен в основном скрипте приложения index.ts
+в отдельный класс, а будет размещен в основном скрипте приложения `index.ts`
 
 
 ## События 
 
 Для осуществления связи между компонентами разных слоев будет использован событийно-ориентированный подход. 
-Для его реализации будет использоваться базовый класс EventEmitter
+Для его реализации будет использоваться базовый класс `EventEmitter`
 
-
-
-
-
-
-
-
-
-
-
-
-Модель данных содердит в себе класс productModel
-Данный класс отвечает за хранение массива товаров
-у него есть конструктов, который не принимает ниаких параметров
-Также в классе есть два метода
-getProducts - метод, который позволяет взять массив всех товаров
-getProduct - метод, который возвращает метод с нужным id для того чтобы в последущем добавить его в корзину
-setProducts - метод, который позволяет получить массив всех  товаров
+Для примера работы подхода взял событие клика по товару и кнопке `Добавить в корзину`
+1. В момент клика по одной из карточек. отрисованных на страничке, инициируется событие `card:select`, которое возвращает `item`, по которому произошел клик
+2. Данное событие обрабатывается при помощи метода `events:on`, метод принимаем `item` и вызывает метод `setPrewiew` модели данных
+3. Метод `setPrewiew` принмает кликнутый `product` и для него инициирует событие `preview:changed`
+4. Данное событие создает экземпляр класса `Card`, реагирует на нажатие кнопки в этой карточке, а также рендерит нужное модальное окно и контент из карточек, добавленных в корзину

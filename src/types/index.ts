@@ -29,7 +29,7 @@ export interface IBasketIndex {
   index: number
 }
 
-export type IBasketCard = IProduct & IBasketIndex;
+export type TCard = IProduct & IBasketIndex;
 
 export interface IOrderResult {
   id: string,
