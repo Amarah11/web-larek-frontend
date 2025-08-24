@@ -156,14 +156,18 @@ interface IOrderResult {
 
 ### Тип данных `TOrderForm`
 
-`type TOrderForm = Omit<IOrder, 'total' | 'items'>`
+```typescript
+type TOrderForm = Omit<IOrder, 'total' | 'items'>
+```
 
 Создается на основе интерфейса `IOrder`, но исключает свойства total и items.
 Нужен для создания класса `OrderForm`(в нем нам не нужны items и total)
 
 ### Тип данных `TPaymentMethod`
 
-`type TPaymentMethod = 'card' | 'cash' | ''`
+```typescript
+type TPaymentMethod = 'card' | 'cash' | ''
+```
 
 Создан для использования в методах модели данных
 
@@ -183,15 +187,67 @@ interface IOrderResult {
 
 ### Класс `ProductModel`
 
-Данный класс предназначен для работы с массивом товаров, содержит в себе:
-1.  защиенное поле `products`, в котором хранится массив всех товаров
-2.  конструктор, который ничего не принимает
-3.  метод `getProducts` - возвращает весь массив товаров
-4.  метод `getProducts` - возвращает один товар по идентификатору(для того чтобы добавить нужный товар в корзину)
-5.  метод `setProducts` - получает с сервера и сохраняет массив всех товаров
+Данный класс необходим для работы с моделью данных всего приложения
+```typescript
+class ProductModel {
+  products: IProduct[]; // каталог товаров
+  preview: IProduct; // карточка для отображения в модальном окне
+  basket: IBasket = { // корзина
+    products: [], // продуктя в корзине
+    total: 0 // итоговая сумма в корзине
+  };
+  order: IOrder = { // заказ
+    payment: 'card', // способ оплаты(по умолчанию card)
+    email: '', // email покупателя
+    phone: '', // телефон покупателя
+    address:'', // адрес покупателя
+    total: 0,  // итоговая сумма заказа(по умолчанию 0)
+    items: [] //товары(по умолчанию их нет)
+  };
+  formErrors: Partial<Record<keyof TOrderForm, string>> = {}; //ошибки при валидации формы
 
-### Класс `ProductModel`
+  constructor(protected events: IEvents) {}
 
+  setProducts(products: IProduct[]) {} // получает массив товаров
+
+  getProduct(id: string):IProduct {} // отдает товар по id
+
+  setPrewiew(product:IProduct) {} // для показа превью карточки в модальном окне
+
+  inBasket(item: IProduct) {} // для проверки наличия товара в корзине
+
+  addToBasket(item: IProduct) {} // добавление в корзину
+
+  removeFromBasket(item: IProduct) {} // удаление из корзины
+
+  clearBasket() {} // очистка корзины
+
+  setPaymentMethod(method:TPaymentMethod) {} // выбор метода оплаты 
+
+  setOrderField(field: keyof TOrderForm, value: string) {} // готовит данные пользователя к отправке
+
+  validateOrderForms() {} // валидация формы
+}
+```
+
+### Класс ProductApi
+
+Не относится к модели данных, предназначен для работы с API сервера
+
+```typescript
+class ProductApi extends Api {
+  readonly cdn: string; // для загрузки карттинок с сервера
+
+  constructor(cdn:string, baseUrl: string) {
+    super(baseUrl),
+    this.cdn = cdn;
+  }
+
+  getProducts() {} // получение товаров с сервера
+
+  orderProducts() {} // отправка заказа пользователя на сервер
+}
+```
 
 
 ## Компоненты представления 
