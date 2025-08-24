@@ -1,4 +1,4 @@
-import { IBasket, IOrder, IProduct, TOrderForm, TPaymentMethod } from "../types";
+import { IBasket, IProduct, TOrderForm, TPaymentMethod } from "../types";
 import { IEvents } from "./base/events";
 
 export class ProductModel {
@@ -8,13 +8,11 @@ export class ProductModel {
     products: [],
     total: 0
   };
-  order: IOrder = {
+  order: TOrderForm = {
     payment: 'card',
     email: '',
     phone: '',
     address:'',
-    total: 0,
-    items: []
   };
   formErrors: Partial<Record<keyof TOrderForm, string>> = {};
 
@@ -66,8 +64,6 @@ export class ProductModel {
     } else { this.order[field] = value};
 
     if(this.order.payment && this.validateOrderForms()) {
-      this.order.total = this.basket.total;
-      this.order.items = this.basket.products;
       this.events.emit('order:ready', this.order);
     }
   }

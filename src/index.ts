@@ -124,7 +124,7 @@ events.on('order:open', () => {
   })
 });
 
-// открытик формы контактов 
+// открытие формы контактов 
 events.on('order:submit', () => {
   modal.render({
     modalContent:contactForm.render({
@@ -160,20 +160,28 @@ events.on('formErrors:changed', (errors: Partial<TOrderForm>) => {
 
 // Отправлена форма заказа
 events.on('contacts:submit', () => {
-    api.orderProducts(productModel.order)
-        .then((result) => {
-            const success = new Success(cloneTemplate(successTemplate), {
-                onClick: () => {
-                    modal.close();
-                    productModel.clearBasket();
-                }
-            });
+  const apiData = {
+      payment: productModel.order.payment,
+      address: productModel.order.address,
+      email: productModel.order.email,
+      phone: productModel.order.phone,
+      total: productModel.basket.total,
+      items: productModel.basket.products
+  }
+  api.orderProducts(apiData)
+    .then((result) => {
+      productModel.clearBasket();
+      const success = new Success(cloneTemplate(successTemplate), {
+        onClick: () => {
+          modal.close();
+        }
+      });
 
-            modal.render({
-                modalContent: success.render(result)
-            });
-        })
-        .catch(err => {
-            console.error(err);
-        });
+      modal.render({
+        modalContent: success.render(result)
+      });
+    })
+    .catch(err => {
+      console.error(err);
+    });
 });

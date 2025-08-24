@@ -209,13 +209,11 @@ class ProductModel {
     total: 0 // итоговая сумма в корзине
   };
   // заказ
-  order: IOrder = { 
+  order: TOrderForm = { 
     payment: 'card', // способ оплаты(по умолчанию card)
     email: '', // email покупателя
     phone: '', // телефон покупателя
     address:'', // адрес покупателя
-    total: 0,  // итоговая сумма заказа(по умолчанию 0)
-    items: [] //товары(по умолчанию их нет)
   };
   formErrors: Partial<Record<keyof TOrderForm, string>> = {}; //ошибки при валидации формы, типизация: необязательные свойства с ключами типа 'TOrderForm' и значениями типа string
 
